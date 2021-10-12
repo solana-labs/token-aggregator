@@ -1,0 +1,24 @@
+{
+  "name": "token-aggregator",
+  "version": "0.0.1",
+  "description": "SPL-name-service .token Aggregator",
+  "main": "dist/index.js",
+  "dependencies": {
+    "borsh": "^0.6.0",
+    "bs58": "^4.0.1",
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.13",
+    "typescript": "^4.4.4",
+    "ts-node": "^10.3.0"
+  },
+  "scripts": {
+    "start": "node .",
+    "build": "tsc",
+    "dev": "nodemon",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}
