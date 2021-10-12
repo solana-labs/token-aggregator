@@ -17,8 +17,9 @@ let autocompleteList = JSON.stringify([]);
   await refreshList();
 
   express()
-    .use((_, res) => {
+    .use((_, res, next) => {
       res.set("Cache-control", `public, max-age=${CACHE_TIME}`);
+      next();
     })
     .get("/", (_, res) => res.send("Token List Aggregator"))
     .get("/token-autocomplete.json", (req, res) => {
