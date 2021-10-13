@@ -11,7 +11,8 @@ const REFRESH_INTERVAL = CACHE_TIME * 1000;
 
 const connection = new Connection(clusterApiUrl("mainnet-beta"));
 
-let autocompleteList = JSON.stringify([]);
+let minimalList = JSON.stringify([]);
+let detailedList = JSON.stringify([]);
 
 (async () => {
   await refreshList();
@@ -21,10 +22,14 @@ let autocompleteList = JSON.stringify([]);
       res.set("Cache-control", `public, max-age=${CACHE_TIME}`);
       next();
     })
-    .get("/", (_, res) => res.send("Token List Aggregator"))
-    .get("/token-autocomplete.json", (req, res) => {
+    .get("/", (_, res) => res.send("SPL Token Aggregator"))
+    .get("/minimal-list.json", (req, res) => {
       res.setHeader("Content-Type", "application/json");
-      res.send(autocompleteList);
+      res.send(minimalList);
+    })
+    .get("/detailed-list.json", (req, res) => {
+      res.setHeader("Content-Type", "application/json");
+      res.send(detailedList);
     })
     .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
@@ -49,22 +54,32 @@ async function refreshList() {
       }
     );
 
-    const results = [];
+    const minimal = [];
+    const detailed = [];
 
     for (let acct of accts) {
       try {
-        const res = TokenData.deserialize(
+        const tokenData = TokenData.deserialize(
           acct.account.data.slice(NameRegistryState.HEADER_LEN)
         );
-        results.push({
-          name: res.name,
-          symbol: res.ticker,
-          mint: bs58.encode(res.mint),
+
+        const mint = bs58.encode(tokenData.mint);
+
+        minimal.push({
+          name: tokenData.name,
+          symbol: tokenData.ticker,
+          mint,
+        });
+
+        detailed.push({
+          ...tokenData,
+          mint,
         });
       } catch (error) {}
     }
 
-    autocompleteList = JSON.stringify(results);
+    minimalList = JSON.stringify(minimal);
+    detailedList = JSON.stringify(detailed);
   } catch (error) {
     console.error(error);
   }
