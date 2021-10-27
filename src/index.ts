@@ -1,7 +1,15 @@
 import express from "express";
 import { clusterApiUrl, Connection, PublicKey } from "@solana/web3.js";
 import { NameRegistryState, TokenData } from "@bonfida/spl-name-service";
+import {
+  CDNTokenListResolutionStrategy,
+  ENV,
+  TokenInfo,
+  TokenInfoMap,
+} from "@solana/spl-token-registry";
+import fetch from "cross-fetch";
 import bs58 from "bs58";
+import _ from "lodash";
 
 const PORT = process.env.PORT || 5000;
 const NAME_PROGRAM = "namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX";
@@ -11,8 +19,7 @@ const REFRESH_INTERVAL = CACHE_TIME * 1000;
 
 const connection = new Connection(clusterApiUrl("mainnet-beta"));
 
-let minimalList = JSON.stringify([]);
-let detailedList = JSON.stringify([]);
+let masterList = JSON.stringify({});
 
 (async () => {
   await refreshList();
@@ -23,13 +30,9 @@ let detailedList = JSON.stringify([]);
       next();
     })
     .get("/", (_, res) => res.send("SPL Token Aggregator"))
-    .get("/minimal-list.json", (req, res) => {
+    .get("/solana.tokenlist.json", (req, res) => {
       res.setHeader("Content-Type", "application/json");
-      res.send(minimalList);
-    })
-    .get("/detailed-list.json", (req, res) => {
-      res.setHeader("Content-Type", "application/json");
-      res.send(detailedList);
+      res.send(masterList);
     })
     .listen(PORT, () => console.log(`Listening on ${PORT}`));
 
@@ -40,6 +43,15 @@ let detailedList = JSON.stringify([]);
 
 async function refreshList() {
   try {
+    const tokenMap: TokenInfoMap = new Map();
+    const cdnStrategy = new CDNTokenListResolutionStrategy();
+    const tokenList = await fetch(cdnStrategy.repositories[0]);
+    const jsonList = await tokenList.json();
+
+    jsonList.tokens.forEach((tokenInfo: TokenInfo) =>
+      tokenMap.set(tokenInfo.address, tokenInfo)
+    );
+
     let accts = await connection.getProgramAccounts(
       new PublicKey(NAME_PROGRAM),
       {
@@ -54,33 +66,54 @@ async function refreshList() {
       }
     );
 
-    const minimal = [];
-    const detailed = [];
-
     for (let acct of accts) {
       try {
         const tokenData = TokenData.deserialize(
           acct.account.data.slice(NameRegistryState.HEADER_LEN)
         );
 
-        const mint = bs58.encode(tokenData.mint);
+        const address = bs58.encode(tokenData.mint);
+        const tokenInfo = getTokenInfo(address, tokenData);
 
-        minimal.push({
-          name: tokenData.name,
-          symbol: tokenData.ticker,
-          mint,
-        });
-
-        detailed.push({
-          ...tokenData,
-          mint,
-        });
+        if (tokenMap.has(tokenInfo.address)) {
+          tokenMap.set(
+            tokenInfo.address,
+            _.merge(tokenMap.get(tokenInfo.address), tokenInfo)
+          );
+        } else {
+          tokenMap.set(tokenInfo.address, tokenInfo);
+        }
       } catch (error) {}
     }
 
-    minimalList = JSON.stringify(minimal);
-    detailedList = JSON.stringify(detailed);
+    jsonList.tokens = [...tokenMap.values()];
+
+    masterList = JSON.stringify(jsonList);
   } catch (error) {
     console.error(error);
   }
+}
+
+function getTokenInfo(address: string, tokenData: TokenData): TokenInfo {
+  const { name, decimals, ticker: symbol } = tokenData;
+
+  let tokenInfo: any = {
+    address,
+    chainId: ENV.MainnetBeta,
+    decimals,
+    name,
+    symbol,
+  };
+
+  if (tokenData.logoUri) {
+    tokenInfo.logoURI = tokenData.logoUri;
+  }
+
+  if (tokenData.website) {
+    tokenInfo.extensions = {
+      website: tokenData.website,
+    };
+  }
+
+  return tokenInfo;
 }
