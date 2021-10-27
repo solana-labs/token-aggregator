@@ -22,3 +22,6 @@ yarn run start
 
 ## Token List
 [http://localhost:5000/solana.tokenlist.json](http://localhost:5000/solana.tokenlist.json)
+
+## Heroku
+[https://spl-token-aggregator.herokuapp.com/solana.tokenlist.json](https://spl-token-aggregator.herokuapp.com/solana.tokenlist.json)
