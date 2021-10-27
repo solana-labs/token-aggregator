@@ -1,6 +1,6 @@
 # spl-token-aggregator
 
-Aggregates and serves JSON lists of onchain token data. Token data is stored in SPL Name Service under the [token name registry](https://docs.bonfida.org/help/tokens).
+Aggregates and serves JSON token list of onchain token data. Token data is stored in SPL Name Service under the [token name registry](https://docs.bonfida.org/help/tokens).
 
 ## Installation
 
