@@ -7,6 +7,7 @@ import {
   TokenInfo,
   TokenInfoMap,
 } from "@solana/spl-token-registry";
+import { landingPageHTML } from "./landing";
 import fetch from "cross-fetch";
 import bs58 from "bs58";
 import _ from "lodash";
@@ -29,7 +30,7 @@ let masterList = JSON.stringify({});
       res.set("Cache-control", `public, max-age=${CACHE_TIME}`);
       next();
     })
-    .get("/", (_, res) => res.send("SPL Token Aggregator"))
+    .get("/", (_, res) => res.send(landingPageHTML))
     .get("/solana.tokenlist.json", (req, res) => {
       res.setHeader("Content-Type", "application/json");
       res.send(masterList);
