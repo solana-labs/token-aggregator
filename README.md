@@ -5,25 +5,20 @@ Aggregates and serves JSON lists of onchain token data. Token data is stored in 
 ## Installation
 
 ```bash
-npm install
+yarn install
 ```
 
 ## Build
 
 ```bash
-npm run build
+yarn run build
 ```
 
 ## Usage
 
 ```bash
-npm run start
+yarn run start
 ```
 
-## Token Lists
-
-Minimal list (name, symbol, mint)
-[http://localhost:5000/minimal-list.json](http://localhost:5000/minimal-list.json)
-
-Detailed list
-[http://localhost:5000/detailed-list.json](http://localhost:5000/detailed-list.json)
+## Token List
+[http://localhost:5000/solana.tokenlist.json](http://localhost:5000/solana.tokenlist.json)
