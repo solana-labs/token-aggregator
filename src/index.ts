@@ -11,6 +11,7 @@ import { landingPageHTML } from "./landing";
 import fetch from "cross-fetch";
 import bs58 from "bs58";
 import _ from "lodash";
+import cors from "cors";
 
 const PORT = process.env.PORT || 5000;
 const NAME_PROGRAM = "namesLPneVptA9Z5rqUDD9tMTWEJwofgaYwp8cawRkX";
@@ -26,6 +27,7 @@ let masterList = JSON.stringify({});
   await refreshList();
 
   express()
+    .use(cors())
     .use((_, res, next) => {
       res.set("Cache-control", `public, max-age=${CACHE_TIME}`);
       next();
